@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    * {
+        margin: 0px;
+        padding: 0px;
+    }
+
+    #box {
+        width: 80%;
+        height: 100vh;
+        border-left: 1px solid black;
+        border-right: 1px solid black;
+
+
+    }
+
+    #plane::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: red;
+        width: 10px;
+        height: 10px;
+    }
+
+    #plane {
+        width: 100px;
+        height: 100px;
+        background-color: skyblue;
+        position: absolute;
+    }
+
+    .bu {
+        width: 10px;
+        height: 10px;
+        background-color: red;
+        border-radius: 50%;
+        position: absolute;
+    }
+
+    .enemyPlane {
+        width: 100px;
+        height: 100px;
+        background-color: red;
+        position: absolute;
+        left: 0px;
+    }
+
+    .blood {
+        width: 100%;
+        height: 10px;
+        /* position: absolute; */
+        bottom: -20px;
+        border: 1px solid;
+    }
+
+    .hp {
+        width: 100%;
+        height: 100%;
+        background-color: red;
+        /* position: absolute; */
+    }
+
+    body {
+        display: flex;
+
+    }
+
+    .tap {
+        width: 10%;
+        height: 100vh;
+        display: flex;
+        flex-flow: column wrap;
+    }
+</style>
+
+<body>
+    <div class="tap">
+        <p>主机</p>
+        <div class="blood">
+            <div class="hp"></div>
+        </div>
+        <p>敌机</p>
+        <div class="blood">
+            <div class="hp"></div>
+        </div>
+    </div>
+    <div id="box">
+        <div id="plane">
+
+        </div>
+
+    </div>
+    <div class="tap">
+
+    </div>
+
+</body>
+<script>
+    let plane = document.getElementById("plane")
+    let box = document.getElementById("box")
+    let boxWidth = box.style.width;
+    let bulit;
+    let num = []
+    // 敌机X
+    let e_x = 0;
+    //  本机
+    let p_x = 0;
+    // 本机Y
+    let p_y = 0
+    // 本机血量
+    let p_hp = 100
+    // 敌机
+    let e_hp = 100
+    // 本机伤害
+    let p_atk = 10
+    // 敌机
+    let e_atk = 10
+    let flag = false; // false is not t is y
+
+    window.onmousemove = (e) => {
+        let windowWidth = window.innerWidth
+        let windowHeight = window.innerHeight
+
+        // console.log(windowWidth, windowHeight);
+
+        let { pageX: x, pageY: y } = e;
+
+        // console.log(x, y, y - (plane.style.height / 2));
+        // if y-50 == border 
+        // 边界判断
+        if (y - 50 <= 0 || y + 50 >= windowHeight || x - 50 <= windowWidth * 0.1 || x + 50 >= windowWidth - (windowWidth * 0.1)) {
+            // console.log("边界");
+            return
+        }
+        let xx = x - 50 + "px"
+        let yy = y - 50 + "px"
+        // allow by arrow
+        plane.style.top = yy;
+        plane.style.left = xx;
+        p_x = x - 50;
+        p_y = y - 50;
+        e_y = windowHeight - 100
+        // console.log(yy, xx);
+        window.onkeydown = (e) => {
+            console.log(flag);
+            if (flag) {
+                // console.log("xx");
+                return
+            }
+            flag = true
+            if (e.key == "a") {
+                // console.log("A");
+                //    build bua
+                let ele = document.createElement('div');
+                ele.className = "bu " + Math.random() * 10000;
+
+
+                plane.appendChild(ele)
+                ele.style.top = 45 + "px";
+                ele.style.left = 45 + "px";
+
+                // push bu in array
+                num.push(ele)
+                let top = 0;
+
+                timer = setInterval( ()=> {
+                    // top=1000的时候停下来
+                    if (top <= -y) {
+
+                        clearInterval(timer);
+                        // scope ele is not anyelse
+                        if (plane.firstElementChild != null) {
+                            plane.removeChild(plane.firstElementChild)
+
+                            flag = false
+
+                        }
+
+                        top = 0
+
+
+
+                    } else {
+                        // 这里设置步长，也就是20ms走10px
+                        top -= 10;
+                        // box的left要加上px才起作用的别忘了！！！
+                        ele.style.top = top + 'px';
+                    }
+                    //    z
+                    if (check(p_x, top, e_x)) {
+                        clearInterval(timer);
+
+                        console.log("击中敌机");
+                        // 删除子弹
+                        if (plane.firstElementChild != null) {
+                            plane.removeChild(plane.firstElementChild)
+                        }
+                        e_hp -= p_atk
+                        console.log("敌机hp" + e_hp);
+                        top = 0
+                        if (e_hp <= 0) {
+                            console.log("成功");
+                        }
+                        flag = false
+
+
+                    }
+                }, 20);
+
+
+            }
+        }
+    }
+    let enemyPlane = document.createElement("div");
+    enemyPlane.className = "enemyPlane"
+    box.appendChild(enemyPlane)
+    function enemyControl(enemyPlane) {
+        console.log("xxx");
+
+        let e_X = 0;
+        let direction = 0;
+        let dir = setInterval(() => {
+            direction = Math.floor(Math.random() * 100); //0 r -1 left
+
+        }, 2000)
+        let width = window.innerWidth;
+
+        let place = {
+            x: 0,
+            y: 0
+        }
+
+        let left = width * 0.1;
+        enemyPlane.style.left = left + 'px';
+        // move
+        var times = setInterval(() => {
+            // console.log(direction);
+            // 判断X超出边界
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+
+            //    获取宽度 判断left?>w_h  - w 
+            let L_Border = width - enemyPlane.style.width;
+            // console.log(left + 10+enemyPlane.style.width , width- (width * 0.1),width);
+            //   判断边界
+            if (left - 10 <= width * 0.1) {
+
+                // 右边
+                direction = 55
+            }
+            if (left + 10 + 100 >= width - (width * 0.1)) {
+                // 左
+                direction = 45
+
+            }
+            // 这里设置步长，也就是20ms走10px
+            if (direction < 50) {
+                left -= 10;
+            } else if (direction > 50) {
+                left += 10;
+            }
+            // box的left要加上px才起作用的别忘了！！！
+            enemyPlane.style.left = left + 'px';
+            place.x = left // 范围 = x + width
+            e_x = left
+            place.y = height - enemyPlane.style.height;
+            // 
+            // console.log(place);
+        }, 20)
+        let isBoom = false
+        setInterval(() => {
+            let height = window.innerHeight;
+
+            if (!isBoom) {
+                boom(enemyPlane, false, height)
+            }
+
+        }, 1000)
+    }
+
+    enemyControl(enemyPlane)
+
+    function boom(box, direction, y) {
+        isBoom = true
+        let fla = false
+        if (!fla) {
+            console.log("函数");
+        } else {
+            console.log("通用");
+        }
+        fla = true
+        let elee = document.createElement('div');
+        elee.className = "bu " + Math.random() * 10000;
+
+        let tops = 0;
+        box.appendChild(elee)
+        elee.style.top = 45 + "px";
+        elee.style.left = 45 + "px";
+        // console.log(parseInt(elee.style.top));
+        timers = setInterval(function () {
+            // top=1000的时候停下来
+            if (direction) {
+                // 向上
+                if (elee.style.top <= -y) {
+
+                    clearInterval(timer);
+                    // scope ele is not anyelse
+
+                    box.removeChild(box.firstChild)
+
+                    flag = false
+                    tops = 0
+
+
+                }
+                // 这里设置步长，也就是20ms走10px
+                tops -= 10;
+                // box的left要加上px才起作用的别忘了！！！
+                elee.style.top = tops + 'px';
+            } else {
+                // 向下
+                // console.log("向下");
+
+                if (tops >= y) {
+
+                    clearInterval(timers);
+                    // scope ele is not anyelse
+                    if (box.firstChild != null) {
+                        box.removeChild(box.firstChild)
+                        flag = false
+                        isBoom = false
+
+                    }
+
+
+                    tops = 0
+
+                } else {
+                    // 这里设置步长，也就是20ms走10px
+                    tops += 30;
+                    // box的left要加上px才起作用的别忘了！！！
+                    elee.style.top = tops + 'px';
+                }
+                // 检查是否击中
+                if (check(e_x, tops, p_x, p_y)) {
+                    clearInterval(timers);
+
+                    console.log();
+                    if (box.firstChild != null) {
+
+                        box.removeChild(box.firstChild)
+                        flag = false
+                        isBoom = false
+
+                    }
+                    p_hp -= e_atk
+                    tops = 0
+                    console.log("机hp" + p_hp);
+                    if (p_hp <= 0) {
+                        alert("失败")
+                    }
+
+
+                }
+
+            }
+
+        }, 20);
+    }
+
+
+
+
+    // 判断
+    function check(b_x, b_y, target_x, target_y = 100, target) {
+        // console.log(target_x <= b_x <= target_x+50);
+        // console.log(target_x , b_x ,target_x+50);
+        // 检查子弹x是否在 t_x +t_width && w_h-t_height 范围内
+        if (target_x - 50 <= b_x && b_x <= target_x + 50 && Math.abs(b_y) >= target_y) {
+            console.log("击中!!!!");
+            return true
+        }
+
+    }
+
+
+</script>
+
+</html>
